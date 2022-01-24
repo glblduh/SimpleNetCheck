@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Net Check</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/vuejs"></script>
+    <style>
+        body {
+            background-color: #1A1A1A;
+            color: #FFFFFF;
+            font-family: Arial;
+        }
+        #centerbox {
+            text-align: center;
+            display: grid;
+            align-items: center;
+            grid-template-columns: 1fr 1fr;
+            height: 85vh;
+        }
+        .testers {
+            display: grid;
+            align-items: center;
+            width: 200px;
+            height: 250px;
+            margin: 0 auto 0 auto;
+            grid-gap: 2vh;
+        }
+        input {
+            color: #FFFFFF;
+            text-align: center;
+            font-weight: bold;
+            background-color: transparent;
+            border-top: 0px;
+            border-left: 0px;
+            border-right: 0px;
+            border-bottom: 3px solid #FFFFFF;
+        }
+        button {
+            color: #FFFFFF;
+            background-color: #3C3C3C;
+            border: 3px;
+            border-style: solid;
+            border-color: #FFFFFF;
+            border-radius: 10px;
+            width: 15vmin;
+            margin: 0 auto 0 auto;
+            font-size: 2vmin;
+        }
+        button:hover {
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #2B2B2B;
+            border-color: #4D4D4D;
+        }
+        h1 {
+            text-align: center;
+        }
+        .error {
+            color: #f44336;
+        }
+        .noterror {
+            color: #66bb6a;
+        }
+        @media only screen and (max-device-width: 480px) {
+            #centerbox {
+                display: grid;
+                align-items: center;
+                grid-template-columns: 100%;
+                grid-gap: 5vh;
+                height: 0;
+            }
+            button {
+                font-size: 3.5vw;
+                width: 30vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Simple Internet Check</h1>
+        <div id="centerbox">
+            <div class="testers" id="ping">
+                <h1>Latency Check</h1>
+                <p v-bind:class="{ error: !pingAlive, noterror: pingAlive }">Status: {{ pingstatus }}</p>
+                <input type="text" v-model="pingaddr">
+                <button v-on:click="pingtest">Check</button>
+            </div>
+            <div class="testers" id="dns">
+                <h1>DNS Check</h1>
+                <p v-bind:class="{ error: !dnsAlive, noterror: dnsAlive }">Status: {{ dnsstatus }}</p>
+                <input type="text" v-model="dnshost">
+                <button v-on:click="dnscheck">Check</button>
+            </div>
+        </div>
+    </div>
+    <script >
+        let socket = io()    
+        let vue = new Vue({
+            el: "#app",
+            data: {
+                pingaddr: "1.1.1.1",
+                dnshost: "google.com",
+                pingstatus: "N/A",
+                pingAlive: false,
+                dnsstatus: "N/A",
+                dnsAlive: false
+            },
+            methods: {
+                pingtest: function(event) {
+                    socket.emit("pingtest", this.pingaddr)
+                },
+                dnscheck: function(event) {
+                    socket.emit("dnscheck", this.dnshost)
+                },
+            }
+        })
+        socket.on("pingdata", (isAlive, data) => {
+            vue.$data.pingAlive = isAlive
+            vue.$data.pingstatus = parseInt(data) + "ms"
+        })
+        socket.on("dnsdata", (isAlive, data) => {
+            vue.$data.dnsAlive = isAlive
+            vue.$data.dnsstatus = data
+        })
+    </script>
+</body>
+</html>
